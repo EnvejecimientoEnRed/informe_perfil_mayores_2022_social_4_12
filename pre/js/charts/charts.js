@@ -40,8 +40,16 @@ export function initChart(iframe) {
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
         let x = d3.scaleLinear()
-            .domain([-1500000,1500000])
+            .domain([-5,5])
             .range([0,width]);
+
+        let xM = d3.scaleLinear()
+            .domain([0,5])
+            .range([width / 2, 0]);
+
+        let xF = d3.scaleLinear()
+            .domain([0,5])
+            .range([width / 2, width]);
 
         svg.append("g")
             .attr("transform", "translate(0," + height + ")")
@@ -55,34 +63,56 @@ export function initChart(iframe) {
         svg.append("g")
             .call(d3.axisLeft(y));
 
-        let prueba = ['No_aplicable_hombres_abs','Superiores_hombres_abs','Secundarios_hombres_abs','Primarios_hombres_abs','Analfabetos_hombres_abs','Analfabetos_mujeres_abs','Primarios_mujeres_abs','Secundarios_mujeres_abs','Superiores_mujeres_abs','No_aplicable_mujeres_abs']
+        let pruebaHombres = ['Analfabetos_hombres_porc','Primarios_hombres_porc','Secundarios_hombres_porc','Superiores_hombres_porc','No_aplicable_hombres_porc'];
 
-        let stackedData = d3.stack()
-            .keys(prueba)
+        let stackedHombres = d3.stack()
+            .keys(pruebaHombres)
             (data);
 
-        let color = d3.scaleOrdinal()
-            .domain(prueba)
-            .range([COLOR_GREY_1, COLOR_PRIMARY_1, COLOR_COMP_2, COLOR_COMP_1, COLOR_OTHER_1, COLOR_OTHER_1, COLOR_COMP_1, COLOR_COMP_2, COLOR_PRIMARY_1, COLOR_GREY_1]);
+        let colorHombres = d3.scaleOrdinal()
+            .domain(pruebaHombres)
+            .range([COLOR_PRIMARY_1, COLOR_COMP_2, COLOR_COMP_1, COLOR_OTHER_1, COLOR_GREY_1]);
 
-        console.log(stackedData);
+        let pruebaMujeres = ['Analfabetos_mujeres_porc','Primarios_mujeres_porc','Secundarios_mujeres_porc','Superiores_mujeres_porc','No_aplicable_mujeres_porc'];
+
+        let stackedMujeres = d3.stack()
+            .keys(pruebaMujeres)
+            (data);
+
+        let colorMujeres = d3.scaleOrdinal()
+            .domain(pruebaMujeres)
+            .range([COLOR_PRIMARY_1, COLOR_COMP_2, COLOR_COMP_1, COLOR_OTHER_1, COLOR_GREY_1]);
 
         function init() {
             svg.append("g")
-                .selectAll("g")
-                .data(stackedData)
+                .selectAll(".hombres")
+                .data(stackedHombres)
                 .enter()
                 .append("g")
-                .attr("fill", function(d) { return color(d.key); })
+                .attr("fill", function(d) { return colorHombres(d.key); })
                 .selectAll("rect")
                 .data(function(d) { return d; })
                 .enter()
                 .append("rect")
                 .attr("height", y.bandwidth())
                 .attr("y", function(d) { return y(d.data.Edad); })
-                .attr("x", function(d) { return x(d[0]); })
-                .attr("width", function(d) { return x(d[1]) - x(d[0]); });
+                .attr("x", function(d) { return xM(Math.abs(d[1])); })
+                .attr("width", function(d) { return Math.abs(xM(d[1]) - xM(d[0]));});
 
+            svg.append("g")
+                .selectAll(".mujeres")
+                .data(stackedMujeres)
+                .enter()
+                .append("g")
+                .attr("fill", function(d) { return colorMujeres(d.key); })
+                .selectAll("rect")
+                .data(function(d) { return d; })
+                .enter()
+                .append("rect")
+                .attr("height", y.bandwidth())
+                .attr("y", function(d) { return y(d.data.Edad); })
+                .attr("x", function(d) { return xF(d[0]); })
+                .attr("width", function(d) { return xF(d[1]) - xF(d[0]); });
         }
 
         function setChart(type) {
