@@ -57,11 +57,23 @@ export function initChart(iframe) {
 
         let y = d3.scaleBand()
                 .range([ 0, height ])
-                .domain(d3.map(function(item) { return item.Edad; }).reverse())
+                .domain(d3.map(data, function(item) {console.log(item); return item.Edad; }))
                 .padding(.1);
 
         svg.append("g")
             .call(d3.axisLeft(y));
+
+        function init() {
+
+        }
+
+        function setChart(type) {
+            if(type != currentType) {
+                if (type == 'Total') {
+                } else {
+                }
+            }            
+        }
 
         /////
         /////
