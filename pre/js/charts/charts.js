@@ -21,10 +21,98 @@ COLOR_OTHER_2 = '#731854';
 
 export function initChart(iframe) {
     //Lectura de datos
-    d3.csv('https://raw.githubusercontent.com/CarlosMunozDiazCSIC/informe_perfil_mayores_2022_social_4_12/main/data/piramide_estudios_censo_2011.csv', function(error,data) {
+    d3.csv('https://raw.githubusercontent.com/CarlosMunozDiazCSIC/informe_perfil_mayores_2022_social_4_12/main/data/evolucion_nivel_estudios_mayores.csv', function(error,data) {
         if (error) throw error;
         
-        ///// CAAAAAAMBIAAAAR PARA HACER OTRA COSA DE ESTUDIOS
+        //Declaramos fuera las variables genéricas
+        let margin = {top: 20, right: 20, bottom: 20, left: 55},
+            width = document.getElementById('chart').clientWidth - margin.left - margin.right,
+            height = document.getElementById('chart').clientHeight - margin.top - margin.bottom;
+
+        let svg = d3.select("#chart")
+            .append("svg")
+              .attr("width", width + margin.left + margin.right)
+              .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+              .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        
+        let gruposEstudios = ['Analfabetos', 'Sin estudios + primaria', 'Secundaria', 'Tercer grado + superiores'];
+
+        //Ejes X
+        let x = d3.scaleLinear()
+            .domain([0,100])
+            .range([0,width]);
+
+        let xAxis = d3.axisBottom(x).ticks(5);
+        
+        svg.append("g")
+            .attr("transform", "translate(0," + height + ")")
+            .call(xAxis);
+
+        //Eje Y
+        let y = d3.scaleBand()
+            .domain(['1970','1981','1991','2001','2011'])
+            .range([0, height]);
+
+        let yAxis = function(g) {
+            g.call(d3.axisLeft(y))
+        }
+        
+        svg.append("g")
+            .attr("class", "yaxis")
+            .call(yAxis);
+
+        let color = d3.scaleOrdinal()
+            .domain(gruposEstudios)
+            .range([COLOR_PRIMARY_1, COLOR_COMP_2, COLOR_COMP_1, COLOR_OTHER_1]);
+
+        let stackedDataEstudios = d3.stack()
+            .keys(gruposEstudios)
+            (data);
+
+        console.log(stackedDataEstudios);
+
+        function init() {
+            svg.append("g")
+                .attr('class','chart-g')
+                .selectAll("g")
+                .data(stackedDataEstudios)
+                .enter()
+                .append("g")
+                .attr("fill", function(d) { return color(d.key); })
+                .selectAll("rect")
+                .data(function(d) { return d; })
+                .enter()
+                .append("rect")
+                .attr('class','prueba')
+                .attr("y", function(d) { return y(d.data.Periodo) + y.bandwidth() / 4; })
+                .attr("x", function(d) { return 0; })
+                .attr("width", function(d) { return x(0); })
+                .attr("height", y.bandwidth() / 2)
+                .transition()
+                .duration(2000)
+                .attr("x", function(d) { return x(d[0]); })
+                .attr("width", function(d) { return x(d[1]) - x(d[0]); });
+        }
+
+        function animateChart() {
+            svg.selectAll('.prueba')
+                .attr("y", function(d) { return y(d.data.sexo) + y.bandwidth() / 4; })
+                .attr("x", function(d) { return 0; })
+                .attr("width", function(d) { return x(0); })
+                .attr("height", y.bandwidth() / 2)
+                .transition()
+                .duration(2000)
+                .attr("x", function(d) { return x(d[0]); })
+                .attr("width", function(d) { return x(d[1]) - x(d[0]); });
+        }
+        
+        /////
+        /////
+        // Resto
+        /////
+        /////
+        init();
         
         //Animación del gráfico
         document.getElementById('replay').addEventListener('click', function() {
