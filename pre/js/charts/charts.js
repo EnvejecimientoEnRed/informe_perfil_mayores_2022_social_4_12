@@ -27,7 +27,7 @@ export function initChart(iframe) {
         if (error) throw error;
         
         //Declaramos fuera las variables genéricas
-        let margin = {top: 20, right: 20, bottom: 20, left: 35},
+        let margin = {top: 10, right: 10, bottom: 20, left: 35},
             width = document.getElementById('chart').clientWidth - margin.left - margin.right,
             height = document.getElementById('chart').clientHeight - margin.top - margin.bottom;
 
@@ -38,7 +38,7 @@ export function initChart(iframe) {
             .append("g")
               .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
         
-        let gruposEstudios = ['Analfabetos', 'Sin estudios + primaria', 'Secundaria', 'Tercer grado + superiores'];
+        let gruposEstudios = ['analfabetos', 'primaria', 'secundaria', 'superiores'];
 
         //Ejes X
         let x = d3.scaleLinear()
@@ -94,6 +94,9 @@ export function initChart(iframe) {
                 .enter()
                 .append("g")
                 .attr("fill", function(d) { return color(d.key); })
+                .attr('class', function(d) {
+                    return 'rect-1 ' + d.key;
+                })
                 .selectAll("rect")
                 .data(function(d) { return d; })
                 .enter()
@@ -118,7 +121,7 @@ export function initChart(iframe) {
 
                     //Texto
                     let html = '<p class="chart__tooltip--title">' + dictionary[current] + '</p>' + 
-                        '<p class="chart__tooltip--text">En el Censo de ' + d.data.Periodo + ', un ' + d.data[current] + '% de la población con 65 o más años declaró tener este nivel de estudios</p>';
+                        '<p class="chart__tooltip--text">En el Censo de <b>' + d.data.Periodo + '</b>, un <b>' + d.data[current] + '%</b> de la población con 65 o más años declaró tener este nivel de estudios</p>';
             
                     tooltip.html(html);
 
