@@ -1,23 +1,25 @@
 //Desarrollo de las visualizaciones
 import * as d3 from 'd3';
-import { numberWithCommas2 } from '../helpers';
-//import { getInTooltip, getOutTooltip, positionTooltip } from './modules/tooltip';
+import { numberWithCommas3 } from '../helpers';
+import { getInTooltip, getOutTooltip, positionTooltip } from '../modules/tooltip';
 import { setChartHeight } from '../modules/height';
 import { setChartCanvas, setChartCanvasImage } from '../modules/canvas-image';
 import { setRRSSLinks } from '../modules/rrss';
 import { setFixedIframeUrl } from './chart_helpers';
 
-//Colores fijos
-const COLOR_PRIMARY_1 = '#F8B05C', 
-COLOR_PRIMARY_2 = '#E37A42', 
-COLOR_ANAG_1 = '#D1834F', 
-COLOR_ANAG_2 = '#BF2727', 
-COLOR_COMP_1 = '#528FAD', 
-COLOR_COMP_2 = '#AADCE0', 
-COLOR_GREY_1 = '#B5ABA4', 
-COLOR_GREY_2 = '#64605A', 
-COLOR_OTHER_1 = '#B58753', 
-COLOR_OTHER_2 = '#731854';
+const COLOR_PRIMARY_1 = '#F8B05C',
+COLOR_ANAG_PRIM_1 = '#BA9D5F', 
+COLOR_ANAG_PRIM_2 = '#9E6C51',
+COLOR_ANAG_PRIM_3 = '#9E3515';
+let tooltip = d3.select('#tooltip');
+
+//Diccionario
+let dictionary = {
+    analfabetos: 'Analfabetos',
+    primaria: 'Estudios primarios (y sin estudios)',
+    secundaria: 'Estudios secundarios',
+    superiores: 'Tercer grado y estudios superiores'   
+};
 
 export function initChart(iframe) {
     //Lectura de datos
@@ -43,7 +45,21 @@ export function initChart(iframe) {
             .domain([0,100])
             .range([0,width]);
 
-        let xAxis = d3.axisBottom(x).ticks(5);
+        let xAxis = function(svg) {
+            svg.call(d3.axisBottom(x).ticks(5));
+            svg.call(function(g) {
+                g.call(function(g){
+                    g.selectAll('.tick line')
+                        .attr('class', function(d,i) {
+                            if (d == 0) {
+                                return 'line-special';
+                            }
+                        })
+                        .attr('y1', '0')
+                        .attr('y2', `-${height}`)
+                });
+            });
+        } 
         
         svg.append("g")
             .attr("transform", "translate(0," + height + ")")
@@ -64,7 +80,7 @@ export function initChart(iframe) {
 
         let color = d3.scaleOrdinal()
             .domain(gruposEstudios)
-            .range([COLOR_PRIMARY_1, COLOR_COMP_2, COLOR_COMP_1, COLOR_GREY_1]);
+            .range([COLOR_PRIMARY_1, COLOR_ANAG_PRIM_1, COLOR_ANAG_PRIM_2, COLOR_ANAG_PRIM_3]);
 
         let stackedDataEstudios = d3.stack()
             .keys(gruposEstudios)
@@ -82,11 +98,45 @@ export function initChart(iframe) {
                 .data(function(d) { return d; })
                 .enter()
                 .append("rect")
-                .attr('class','prueba')
+                .attr('class','rect')
                 .attr("y", function(d) { return y(d.data.Periodo) + y.bandwidth() / 4; })
                 .attr("x", function(d) { return 0; })
                 .attr("width", function(d) { return x(0); })
                 .attr("height", y.bandwidth() / 2)
+                .on('mouseover', function(d,i,e){
+                    //Opacidad de las barras
+                    let other = svg.selectAll('.rect-1');
+                    let current = this.parentNode.classList[1];
+                    let _this = svg.selectAll(`.${current}`);
+                    
+                    other.each(function() {
+                        this.style.opacity = '0.4';
+                    });
+                    _this.each(function() {
+                        this.style.opacity = '1';
+                    });
+
+                    //Texto
+                    let html = '<p class="chart__tooltip--title">' + dictionary[current] + '</p>' + 
+                        '<p class="chart__tooltip--text">En el Censo de ' + d.data.Periodo + ', un ' + d.data[current] + '% de la población con 65 o más años declaró tener este nivel de estudios</p>';
+            
+                    tooltip.html(html);
+
+                    //Tooltip
+                    positionTooltip(window.event, tooltip);
+                    getInTooltip(tooltip);
+
+                })
+                .on('mouseout', function(d,i,e) {
+                    //Quitamos los estilos de la línea
+                    let bars = svg.selectAll('.rect-1');
+                    bars.each(function() {
+                        this.style.opacity = '1';
+                    });
+                
+                    //Quitamos el tooltip
+                    getOutTooltip(tooltip); 
+                })
                 .transition()
                 .duration(2000)
                 .attr("x", function(d) { return x(d[0]); })
@@ -94,7 +144,7 @@ export function initChart(iframe) {
         }
 
         function animateChart() {
-            svg.selectAll('.prueba')
+            svg.selectAll('.rect')
                 .attr("y", function(d) { return y(d.data.Periodo) + y.bandwidth() / 4; })
                 .attr("x", function(d) { return 0; })
                 .attr("width", function(d) { return x(0); })
