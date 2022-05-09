@@ -121,7 +121,7 @@ export function initChart() {
 
                     //Texto
                     let html = '<p class="chart__tooltip--title">' + dictionary[current] + '</p>' + 
-                        '<p class="chart__tooltip--text">En el Censo de <b>' + d.data.Periodo + '</b>, un <b>' + d.data[current] + '%</b> de la población con 65 o más años declaró tener este nivel de estudios</p>';
+                        '<p class="chart__tooltip--text">En el Censo de <b>' + d.data.Periodo + '</b>, un <b>' + d.data[current] + '%</b> de la población con 65 y más años declaró tener este nivel de estudios</p>';
             
                     tooltip.html(html);
 
